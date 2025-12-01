@@ -41,7 +41,6 @@ and divid 1M for the val dataset
 Train a model from this script:
 
 ```bash
-
 bash train_rater.sh
 ```
 
@@ -85,10 +84,9 @@ and rank the data samples by ratings in descending order.
 
 ## Acknowledgments
 
-We thank Simon Niklaus for the help on the LAION image retrieval. We thank Ruihan Gao, Maxwell Jones, and Gaurav Parmar for helpful discussions and feedback on drafts. Sheng-Yu Wang is supported by the Google PhD Fellowship. The project was partly supported by Adobe Inc., the Packard Fellowship, the IITP grant funded by the Korean Government (MSIT) (No. RS-2024-00457882, National AI Research Lab Project), NSF IIS-2239076, and NSF ISS-2403303.
+Our code is built upon [STAR-T2I](https://github.com/Davinci-XLab/STAR-T2I) and [SEAL](https://github.com/hanshen95/SEAL).
 
 ## Citation
-
 If you use Alchemist in your research, please cite:
 
 ```bibtex
