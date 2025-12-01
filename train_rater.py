@@ -3,7 +3,6 @@ import os
 import shutil
 import sys
 import time
-# from tkinter import NO
 import warnings
 import pdb
 from functools import partial
@@ -23,7 +22,6 @@ from utils.lr_control import filter_params
 
 import dist
 from utils import arg_util, misc
-# from dataset.data import build_dataset,build_dataset_webtar,gather_file_keys,
 from dataset.data import build_dataset_csv
 from models.text_encoder import build_text
 from utils.data_sampler import DistInfiniteBatchSampler
@@ -69,45 +67,24 @@ def build_everything(args: arg_util.Args):
             print('[using csv] ...\n')
             dataset_train, dataset_val, dataset_test = build_dataset_csv(args)
             types = str((type(dataset_train).__name__, type(dataset_val).__name__, type(dataset_test).__name__))
-            # ld_val = DataLoader(
-            #     dataset_val, num_workers=0, pin_memory=True,
-            #     generator=args.get_different_generator_for_each_rank(),
-            #     batch_sampler=DistInfiniteBatchSampler(
-            #         dataset_len=len(dataset_val), glb_batch_size=args.glb_batch_size, same_seed_for_all_ranks=args.same_seed_for_all_ranks,
-            #         shuffle=True, fill_last=True, rank=dist.get_rank(), world_size=dist.get_world_size(), start_ep=start_ep, start_it=start_it,
-            #     ),
-            #     worker_init_fn=init_worker
-            # )
             ld_val = DataLoader(
                 dataset_val, num_workers=0, pin_memory=True,
                 generator=args.get_different_generator_for_each_rank(),
                 batch_sampler=DistInfiniteBatchSampler(
                     dataset_len=len(dataset_val), glb_batch_size=args.glb_batch_size, same_seed_for_all_ranks=args.same_seed_for_all_ranks,
-                    shuffle=False, fill_last=True, rank=dist.get_rank(), world_size=dist.get_world_size(), start_ep=start_ep, start_it=start_it,
+                    shuffle=True, fill_last=True, rank=dist.get_rank(), world_size=dist.get_world_size(), start_ep=start_ep, start_it=start_it,
                 ),
                 worker_init_fn=init_worker
             )
-            del dataset_val
-
-            # ld_train = DataLoader(
-            #     dataset=dataset_train, num_workers=args.workers, pin_memory=True,
-            #     generator=args.get_different_generator_for_each_rank(), # worker_init_fn=worker_init_fn,
-            #     batch_sampler=DistInfiniteBatchSampler(
-            #         dataset_len=len(dataset_train), glb_batch_size=args.glb_batch_size, same_seed_for_all_ranks=args.same_seed_for_all_ranks,
-            #         shuffle=True, fill_last=True, rank=dist.get_rank(), world_size=dist.get_world_size(), start_ep=start_ep, start_it=start_it,
-            #     ),
-            #     worker_init_fn=init_worker
-            # )
             ld_train = DataLoader(
                 dataset=dataset_train, num_workers=args.workers, pin_memory=True,
                 generator=args.get_different_generator_for_each_rank(), # worker_init_fn=worker_init_fn,
                 batch_sampler=DistInfiniteBatchSampler(
                     dataset_len=len(dataset_train), glb_batch_size=args.glb_batch_size, same_seed_for_all_ranks=args.same_seed_for_all_ranks,
-                    shuffle=False, fill_last=True, rank=dist.get_rank(), world_size=dist.get_world_size(), start_ep=start_ep, start_it=start_it,
+                    shuffle=True, fill_last=True, rank=dist.get_rank(), world_size=dist.get_world_size(), start_ep=start_ep, start_it=start_it,
                 ),
                 worker_init_fn=init_worker
             )
-            del dataset_train         
         else:
             raise NotImplementedError('support csv only')
 
@@ -120,7 +97,7 @@ def build_everything(args: arg_util.Args):
             iters_val = len(ld_val)
             ld_val = iter(ld_val)
             # noinspection PyArgumentList
-            print(f'     [dataloader multi processing](*) finished! ({time.time()-stt:.2f}s)', flush=True, clean=True)
+            print(f'[dataloader multi processing](*) finished! ({time.time()-stt:.2f}s)', flush=True, clean=True)
             print(f'[dataloader] gbs={args.glb_batch_size}, lbs={args.batch_size}, iters_train={iters_train}, types(tr, va)={types}')
             print(f'[dataloader] gbs={args.glb_batch_size}, lbs={args.batch_size}, iter_val={iters_val}, types(tr, va)={types}')
         except:
@@ -195,8 +172,6 @@ def build_everything(args: arg_util.Args):
     varRater_wo_ddp: VARRater = args.compile_model(varRater_wo_ddp, args.tfast)
     var: DDP = (DDP if dist.initialized() else NullDDP)(var_wo_ddp, device_ids=[dist.get_local_rank()], find_unused_parameters=True, broadcast_buffers=False)
     varRater: DDP = (DDP if dist.initialized() else NullDDP)(varRater_wo_ddp, device_ids=[dist.get_local_rank()], find_unused_parameters=True, broadcast_buffers=False)
-    # var: FSDP = (FSDP if dist.initialized() else NullDDP)(var_wo_ddp, device_id=dist.get_local_rank(),
-    #                                                       sharding_strategy=ShardingStrategy.FULL_SHARD)
 
     print(f'[INIT] VAR model = {var_wo_ddp}\n\n')
     count_p = lambda m: f'{sum(p.numel() for p in m.parameters())/1e6:.2f}'

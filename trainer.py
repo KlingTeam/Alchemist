@@ -103,7 +103,6 @@ class VARTrainer(object):
     @torch.no_grad()
     def eval_ep(self, args, ld_val, text_enc):
         print(f"===========> in eval_ep")
-# def train_one_ep(ep: int, is_first_ep: bool, start_it: int, args: arg_util.Args, tb_lg: misc.TensorboardLogger, ld_or_itrt, text_enc, iters_train: int, trainer):
         tot = 0
         L_mean, L_tail, acc_mean, acc_tail = 0, 0, 0, 0
         stt = time.time()
