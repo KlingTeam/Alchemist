@@ -251,7 +251,6 @@ def build_everything(args: arg_util.Args):
     print(f'[INIT][#para] ' + ', '.join([f'{k}={count_p(m)}' for k, m in (('VAR', var_wo_ddp),)]) + '\n\n')
     
     # build optimizer
-    # fsdp我暂时不会写混合adam和adamw的
     names, paras, para_groups = filter_params(var_wo_ddp, nowd_keys={#nowd_keys:没有权重衰减的参数名
         'cls_token', 'start_token', 'task_token', 'cfg_uncond',
         'pos_embed', 'pos_1LC', 'pos_start', 'start_pos', 'lvl_embed',
