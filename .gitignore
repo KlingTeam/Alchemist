@@ -1,3 +1,11 @@
-outdir/*
-.DS_store
-__pycache__/*
+# 忽略 outdir 下所有内容
+outdir/
+
+# 忽略 Mac 的系统文件
+.DS_Store
+
+# 忽略 Python 缓存目录
+__pycache__/
+
+# 忽略 pyc 文件
+*.pyc
