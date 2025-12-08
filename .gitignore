@@ -1,0 +1,3 @@
+outdir/*
+.DS_store
+__pycache__/*

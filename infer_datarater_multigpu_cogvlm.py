@@ -34,7 +34,7 @@ def main(args):
     device = torch.device(f'cuda:{args.local_rank}')
     args.rank = dist.get_rank()
     
-    args.data_args = {'train_csv_path': '/m2v_intern/m2v_data/data_version/250606_laion5b_cogvlm_30M_trainset.csv', "cogvlm":True}
+    args.data_args = {'train_csv_path': '/m2v_intern/precomputed_latents/251127_laion_30m_degraded/random_100k_part.csv', "cogvlm":True}
     # args.data_args = {'train_csv_path': '/m2v_intern/zhouyang15/codes/STAR-T2I/mjhq_dataset.csv', "cogvlm":False}
     args.precomputed_latent = False
     args.precomputed_rootdir = ""

@@ -287,30 +287,6 @@ class MJDataset(torch.utils.data.Dataset):
         print('==>effective prompts', self.len_effective_prompts)
         self._length = self.num_instance_images
 
-        # self.webdataset = None 
-        # if web_tar_list is not None and len(web_tar_list) > 0:
-        #     self.webdataset = create_webdataset(web_tar_list,
-        #                             size=(self.resolution,self.resolution),
-        #                             enable_text=True,
-        #                             enable_image=True,
-        #                             image_key="webp",
-        #                             caption_key="txt",
-        #                             total_length=100,
-        #                             negative_tag=self.negative_tag,
-        #                             prompt_length=[self.prompt_min_length,self.prompt_max_length],
-        #                             classifier_free_training_prob=self.classifier_free_training_prob,
-        #                             min_resolution=self.resolution,
-        #                             cache_path=None)
-
-            # webdataset_length = len(self.webdataset)
-            # for i in range(webdataset_length):
-            #     self.buckets['webdataset'].append(i+self.num_instance_images)
-            # self.webdataset = iter(self.webdataset)
-            # self._length = self.num_instance_images + webdataset_length
-        # if parquet_list is not None and len(parquet_list)>0:
-        #     # self.parquet_list = create_parquet()
-        #     pass
-
         print('==>total effective images with web_tar', self._length)
 
     def get_image_from_lmdb(self,file_key):

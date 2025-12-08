@@ -764,7 +764,7 @@ class BatchHead(nn.Module):
 
     def forward(self, pooled_BC):
         mean_feat = pooled_BC.mean(dim=0, keepdim=True)
-        var_feat = pooled_BC.var(dim=0, keepdim=True)
+        var_feat = pooled_BC.var(dim=0, keepdim=True, unbiased=False)
         batch_feat = torch.cat([mean_feat, var_feat], dim=-1)
         return self.fc(batch_feat)
 

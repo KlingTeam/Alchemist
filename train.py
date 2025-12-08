@@ -185,8 +185,6 @@ def build_everything(args: arg_util.Args):
                 ),
             )
             del dataset_train
-
-        num_classes = 1000
         
         [print(line) for line in auto_resume_info]
         print(f'[dataloader multi processing] ...', end='', flush=True)
