@@ -4,8 +4,8 @@ torchrun \
 --nproc_per_node=$NUM_GPUS \
 --master_port=12355 \
 infer_datarater_multigpu_cogvlm.py \
---model_path /m2v_intern/dingkaixin/STAR-T2I/outdir/rater/30m_rater_d4_d16_256-0828-multinodes-dev_batchHead_raterDepth8_cogvlm_ep/ar-ckpt-ep3.pth \
---output_dir /m2v_intern/precomputed_latents/251127_laion_30m_degraded/laion_30m_degraded
+--model_path /m2v_intern/dingkaixin/alchemist/outdir/30m_rater_d4_d16_256-0828-multinodes-dev_raterDepth8_proxyDepth30_cogvlm/ar-ckpt-ep1.pth \
+--output_dir /m2v_intern/precomputed_latents/250606_laion5b_cogvlm_30M/rater_csv_1208/laion_30m_rater_d4_d16_256-0828-multinodes-dev_raterDepth8_proxyDepth30_cogvlm_ar-ckpt-ep1
 
 
 

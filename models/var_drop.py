@@ -911,25 +911,6 @@ class VARRater(nn.Module):
         self.attn_bias_for_masking = torch.where(d >= dT, 0., -torch.inf).reshape(1, 1, self.L, self.L).contiguous().to(dist.get_device())
         print('using casual attention...')
         
-        # 6. classifier head
-        # self.head_nm = AdaLNBeforeHead(self.C, self.D, norm_layer=norm_layer)
-        # self.head_logits = nn.Linear(self.C, self.V)
-        ##TODO#####################
-        # if not score_head_gelu:
-        #     self.score_head = nn.Sequential(
-        #                 nn.Linear(self.C, 64),   # 中间层
-        #                 nn.ReLU(),
-        #                 nn.Linear(64, 1),        # 输出单值
-        #                 nn.Sigmoid()             # 压缩到 [0,1]
-        #             )
-        # else:
-        #     self.score_head = nn.Sequential(
-        #                 nn.Linear(self.C, 64),   # 中间层
-        #                 nn.GELU(approximate='tanh'),
-        #                 nn.Linear(64, 1),        # 输出单值
-        #                 nn.Sigmoid()             # 压缩到 [0,1]
-        #             )
-            
         self.head_instance = nn.Sequential(
             nn.Linear(self.C, 64),
             nn.GELU(approximate='tanh'),
@@ -968,9 +949,7 @@ class VARRater(nn.Module):
             ])
             self.from_idx=sample_from_idx
             self.bg_last,_=self.begin_ends[self.from_idx];_,self.ed_last=self.begin_ends[-1]
-            # self.adaptive_norm = AdaLNBeforeHead(embed_dim, self.D, norm_layer=norm_layer)
             length_=self.ed_last-self.bg_last
-            # self.attn_bias_for_masking = torch.where(d >= dT, 0., -torch.inf).reshape(1, 1, self.L, self.L).contiguous().to(dist.get_device())
             self.attn_mask=torch.where(d[:,self.bg_last-1:self.ed_last]==dT[...,self.bg_last-1:self.ed_last],0,-torch.inf).reshape(1, 1, length_+1, length_+1).contiguous().to(dist.get_device())
             self.attn_mask[:,:,0]=0;self.attn_mask[...,0]=0
             self.pos_start_last = nn.Parameter(torch.empty(1, self.first_l, embed_dim))
@@ -1068,8 +1047,6 @@ class VARRater(nn.Module):
         row_indices = torch.arange(top_left_x, top_left_x + k).unsqueeze(1) * patch_nums
         col_indices = torch.arange(top_left_y, top_left_y + k)
         grid_indices = (row_indices + col_indices).flatten()
-        # print([top_left_x,top_left_x+k,top_left_y,top_left_y+k],patch_nums)
-        # Expand indices to match batch size
         selected_indices = grid_indices.view(-1)  # Shape (B, k*k)
         
         return selected_region, selected_indices, [top_left_x+edge,top_left_x+k-edge,top_left_y+edge,top_left_y+k-edge]
@@ -1169,23 +1146,11 @@ class VARRater(nn.Module):
                       attn_bias=attn_bias,
                       freqs_cis=freqs_cis,
                       layer_id=i)
-            
-        
-        ###TODO#####################
         pooled_features = x_BLC.mean(dim=1)
         score_instance = self.head_instance(pooled_features)
-        # print("in line 1164 score_instance ", score_instance.shape)
         score_batch = self.head_batch(pooled_features)
-        # print("in line 1165 score_batch", score_batch)
-        # print("score_instance ", score_instance)
-        # score_batch = torch.softmax(score_batch, dim=0)   # 在 batch 维上归一化
-        score_instance = torch.softmax(score_instance, dim=0)  # 或 dim=1 取决于结构
-        # score_batch = 1 
+        score_instance = torch.softmax(score_instance, dim=0)  
         score = score_instance * score_batch
-        # score = self.score_head(pooled_features)
-        print("in line 1186 score", score)
-
-        ###TODO#####################
         return score
 
     
