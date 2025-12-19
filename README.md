@@ -91,10 +91,10 @@ Our code is built upon [STAR-T2I](https://github.com/Davinci-XLab/STAR-T2I) and 
 If you use Alchemist in your research, please cite:
 
 ```bibtex
-@inproceedings{ding2025alchemist,
+@article{ding2025alchemist,
   title={Alchemist: Unlocking Efficiency in Text-to-Image Model Training via Meta-Gradient Data Selection},
-  author={Kaixin Ding, Yang Zhou, Xi Chen, Miao Yang, Jiarong Ou, Rui Chen, Xin Tao, Hengshuang Zhao},
-  booktitle={arxiv:2512.16905},
-  year = {2025},
+  author={Ding, Kaixin and Zhou, Yang and Chen, Xi and Yang, Miao and Ou, Jiarong and Chen, Rui and Tao, Xin and Zhao, Hengshuang},
+  journal={arXiv preprint arXiv:2512.16905},
+  year={2025},
 }
 ```
