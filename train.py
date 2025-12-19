@@ -32,31 +32,13 @@ import torchvision
 
 
 def get_dynamic_weights(dataset_len: int, epoch: int, max_epoch: int, num_bins : int = 10) -> torch.Tensor:
-    """
-    根据epoch动态生成权重向量:
-    - 初期: 前10%最大,中10%居中,后10%最小
-    - 中期: 中10%最大,前后10%次之
-    - 后期: 后10%最大,中10%居中,前10%最小
-    Args:
-        dataset_len (int): 数据集长度
-        epoch (int): 当前epoch
-        max_epoch (int): 最大epoch
-    Returns:
-        torch.Tensor: 权重向量, shape=[dataset_len], 范围[0,1]
-    """
     num_bins = 10
     indices = torch.arange(dataset_len)
-    # 样本所属的bin [0,9]
     bins = torch.div(indices * num_bins, dataset_len, rounding_mode="floor")
-    # 归一化时间 α ∈ [0,1]
     alpha = epoch / max_epoch
-    # 为每个bin分配一个峰值位置, 前->中->后线性插值
     peak_positions = torch.linspace(0.0, 1.0, num_bins)
-    # 为每个bin计算权重, 先升后降 or 单调
     weights_per_bin = 0.5 * (1 + torch.cos(torch.pi * (alpha - peak_positions)))
-    # 映射每个样本对应的权重
     weights = weights_per_bin[bins]
-    # 限制权重范围在[0,1]
     weights = torch.clamp(weights, 0.0, 1.0)
     return weights
 
@@ -86,13 +68,6 @@ def build_everything(args: arg_util.Args):
         tb_lg = misc.DistLogger(None, verbose=False)
     dist.barrier()
     
-    # log args
-    # print(f'global bs={args.glb_batch_size}, local bs={args.batch_size}')
-    # # args.batch_size=1
-    # args.glb_batch_size=1 #glb_batch_size 优先级 > batch_size
-    # print(f'initial args:\n{str(args)}')
-    
-    # build data
     if not args.local_debug:
         print(f'[build PT data] ...\n')
         if args.using_webtar:
@@ -111,8 +86,6 @@ def build_everything(args: arg_util.Args):
                 shuffle=False, drop_last=False,
                 collate_fn=custom_collate_fn
             )
-            # for idx,item in enumerate(ld_train):
-            #     print(f"Rank {dist.get_local_rank()}: Prompt={item['prompt']}, File Key={item['file_key']}, url={item['url']}")
         elif args.using_csv:
             print('[using csv] ...\n')
             dataset_train, dataset_val, dataset_test = build_dataset_csv(args)
@@ -150,18 +123,6 @@ def build_everything(args: arg_util.Args):
                     ),
                     worker_init_fn=init_worker
                 )
-                # print("in line 153 args.glb_batch_size", args.glb_batch_size, )
-                # ld_train = DataLoader(
-                #     dataset=dataset_train, num_workers=args.workers, pin_memory=True,
-                #     generator=args.get_different_generator_for_each_rank(), # worker_init_fn=worker_init_fn,
-                #     batch_sampler=DistInfiniteBatchSampler(
-                #         dataset_len=len(dataset_train), glb_batch_size=args.glb_batch_size, same_seed_for_all_ranks=args.same_seed_for_all_ranks,
-                #         shuffle=False, fill_last=True, rank=dist.get_rank(), world_size=dist.get_world_size(), start_ep=start_ep, start_it=start_it,
-                #     ),
-                #     worker_init_fn=init_worker
-                # )
-
-                ###TODO#
             del dataset_train
             
         else:
@@ -213,7 +174,7 @@ def build_everything(args: arg_util.Args):
         V=4096, Cvae=32, ch=160, share_quant_resi=4,        # hard-coded VQVAE hyperparameters
         device=dist.get_device(), patch_nums=args.patch_nums,
         depth=args.depth, shared_aln=args.saln, attn_l2_norm=args.anorm,
-        enable_cross=args.enable_cross,in_dim_cross=in_dim_cross,#TODO:换成从text enc得到的参数
+        enable_cross=args.enable_cross,in_dim_cross=in_dim_cross,
         flash_if_available=args.fuse, fused_if_available=args.fuse,
         init_adaln=args.aln, init_adaln_gamma=args.alng, init_head=args.hd, init_std=args.ini,
         rope_emb=args.rope_emb,lvl_emb=args.lvl_emb,
@@ -240,8 +201,7 @@ def build_everything(args: arg_util.Args):
     vae_local: VQVAE = args.compile_model(vae_local, args.vfast)
     var_wo_ddp: VAR = args.compile_model(var_wo_ddp, args.tfast)
     var: DDP = (DDP if dist.initialized() else NullDDP)(var_wo_ddp, device_ids=[dist.get_local_rank()], find_unused_parameters=True, broadcast_buffers=False)
-    # var: FSDP = (FSDP if dist.initialized() else NullDDP)(var_wo_ddp, device_id=dist.get_local_rank(),
-    #                                                       sharding_strategy=ShardingStrategy.FULL_SHARD)
+
 
     print(f'[INIT] VAR model = {var_wo_ddp}\n\n')
     count_p = lambda m: f'{sum(p.numel() for p in m.parameters())/1e6:.2f}'
@@ -275,11 +235,6 @@ def build_everything(args: arg_util.Args):
         vae_local=vae_local, var_wo_ddp=var_wo_ddp, var=var,
         var_opt=var_optim, label_smooth=args.ls
     )
-    # if trainer_state is not None and len(trainer_state):
-    #     print('unsing strict=False in loading...')
-    #     missing,unexpected=trainer.load_state_dict(trainer_state, strict=False, skip_vae=True) # don't load vae again
-    #     print('checkpoints incompatible: ',missing,unexpected)
-
 
     del vae_local, var_wo_ddp, var, var_optim
     

@@ -113,7 +113,7 @@ def build_everything(args: arg_util.Args):
         V=4096, Cvae=32, ch=160, share_quant_resi=4,        # hard-coded VQVAE hyperparameters
         device=dist.get_device(), patch_nums=args.patch_nums,
         depth=args.depth, shared_aln=args.saln, attn_l2_norm=args.anorm,
-        enable_cross=args.enable_cross,in_dim_cross=in_dim_cross,#TODO:换成从text enc得到的参数
+        enable_cross=args.enable_cross,in_dim_cross=in_dim_cross,
         flash_if_available=args.fuse, fused_if_available=args.fuse,
         init_adaln=args.aln, init_adaln_gamma=args.alng, init_head=args.hd, init_std=args.ini,
         rope_emb=args.rope_emb,lvl_emb=args.lvl_emb,
@@ -132,7 +132,7 @@ def build_everything(args: arg_util.Args):
     varRater_wo_ddp = build_varRater(
         vae_local=vae_local, device=dist.get_device(), patch_nums=args.patch_nums,
         depth=args.raterDepth, shared_aln=args.saln, attn_l2_norm=args.anorm,
-        enable_cross=args.enable_cross,in_dim_cross=in_dim_cross,#TODO:换成从text enc得到的参数
+        enable_cross=args.enable_cross,in_dim_cross=in_dim_cross,
         flash_if_available=args.fuse, fused_if_available=args.fuse,
         init_adaln=args.aln, init_adaln_gamma=args.alng, init_head=args.hd, init_std=args.ini,
         rope_emb=args.rope_emb,lvl_emb=args.lvl_emb,
@@ -180,9 +180,7 @@ def build_everything(args: arg_util.Args):
     print(f'[INIT] VARRater model = {varRater_wo_ddp}\n\n')
     print(f'[INIT][#para] ' + ', '.join([f'{k}={count_p(m)}' for k, m in (('VARRater', varRater_wo_ddp),)]) + '\n\n')
     
-    # build optimizer
-    # fsdp我暂时不会写混合adam和adamw的
-    names, paras, para_groups = filter_params(var_wo_ddp, nowd_keys={#nowd_keys:没有权重衰减的参数名
+    names, paras, para_groups = filter_params(var_wo_ddp, nowd_keys={
         'cls_token', 'start_token', 'task_token', 'cfg_uncond',
         'pos_embed', 'pos_1LC', 'pos_start', 'start_pos', 'lvl_embed',
         'gamma', 'beta',
@@ -202,7 +200,7 @@ def build_everything(args: arg_util.Args):
     )
     del names, paras, para_groups
 
-    names_rater, paras_rater, para_groups_rater = filter_params(varRater_wo_ddp, nowd_keys={#nowd_keys:没有权重衰减的参数名
+    names_rater, paras_rater, para_groups_rater = filter_params(varRater_wo_ddp, nowd_keys={
         'cls_token', 'start_token', 'task_token', 'cfg_uncond',
         'pos_embed', 'pos_1LC', 'pos_start', 'start_pos', 'lvl_embed',
         'gamma', 'beta',
@@ -434,18 +432,18 @@ def train_one_ep(ep: int, is_first_ep: bool, start_it: int, args: arg_util.Args,
         wp_it = args.wp * new_iters
         min_tlr, max_tlr, min_twd, max_twd = lr_wd_annealing(args.sche, trainer.var_opt.optimizer, args.tlr, args.twd, args.twde, g_it, wp_it, max_it, wp0=args.wp0, wpe=args.wpe)
         new_min_tlr, new_max_tlr, new_min_twd, new_max_twd = lr_wd_annealing(args.sche, trainer.varRater_opt.optimizer, args.tlr, args.twd, args.twde, g_it, wp_it, max_it, wp0=args.wp0, wpe=args.wpe)
-        # warmup:迭代次数<wp_it时，学习率从wp0线性增加到1 (乘peak_lr=1e-5)
+
         args.cur_lr, args.cur_wd = max_tlr, max_twd
         
         if args.pg: # default: 0.0, no progressive training, won't get into this
-            if g_it <= wp_it: prog_si = args.pg0#warmup阶段prog_si是默认值pg0=4
-            elif g_it >= max_it*args.pg: prog_si = len(args.patch_nums) - 1#iter大于args.pg指定的iter时，prog_si是scale个数
+            if g_it <= wp_it: prog_si = args.pg0#
+            elif g_it >= max_it*args.pg: prog_si = len(args.patch_nums) - 1#
             else:
                 delta = len(args.patch_nums) - 1 - args.pg0
                 progress = min(max((g_it - wp_it) / (max_it*args.pg - wp_it), 0), 1) # from 0 to 1
                 prog_si = args.pg0 + round(progress * delta)    # from args.pg0 to len(args.patch_nums)-1
         else:
-            prog_si = -1#prog_si似乎是指定不同训练stage focus在不同scale上
+            prog_si = -1 #
         
         stepping = (g_it + 1) % args.ac == 0
         step_cnt += int(stepping)

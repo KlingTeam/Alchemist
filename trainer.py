@@ -450,7 +450,6 @@ class VARRaterTrainer(object):
         new_inp_B3HW: FTen, new_label_B: Union[ITen, FTen], new_prompt_embeds: None, precomputed_latent: bool = False,
         rater_reg: bool = False, fixVar: bool = False
     ) -> Tuple[Optional[Union[Ten, float]], Optional[float]]:
-        # label_B是imagenet的class，inp_B3HW是输入图像
         # progressive training
         encoder_hidden_states,attn_mask,pooled_embed=prompt_embeds
         # <<< tensor of new_prompt_embeds
@@ -474,10 +473,10 @@ class VARRaterTrainer(object):
         if precomputed_latent:
             gt_idx_Bl: List[ITen] = self.vae_local.quantize.f_to_idxBl_or_fhat(inp_B3HW, to_fhat='idx')
         else:        
-            gt_idx_Bl: List[ITen] = self.vae_local.img_to_idxBl(inp_B3HW)#gt_idx_Bl:所有scale对应的离散token的真值
+            gt_idx_Bl: List[ITen] = self.vae_local.img_to_idxBl(inp_B3HW)
 
         gt_BL = torch.cat(gt_idx_Bl, dim=1)
-        x_BLCv_wo_first_l: Ten = self.quantize_local.idxBl_to_var_input(gt_idx_Bl)#返回的是scale的插值结果，注意x_BLCv_wo_first_l没有第一个scale
+        x_BLCv_wo_first_l: Ten = self.quantize_local.idxBl_to_var_input(gt_idx_Bl)
 
         # <<< forward of new_inp_B3HW
         if precomputed_latent:
@@ -506,8 +505,8 @@ class VARRaterTrainer(object):
                 last_l=self.var.module.drop_start
                 loss = self.train_loss(logits_BLV.view(-1, V), gt_BL.view(-1)).view(1, -1)
             else:
-                loss = self.train_loss(logits_BLV.view(-1, V), gt_BL.view(-1)).view(B, -1) ## loss.shape = [B, L] # L is num token
-            # print("in line 508 loss ", loss)
+                loss = self.train_loss(logits_BLV.view(-1, V), gt_BL.view(-1)).view(B, -1)
+            
             if prog_si >= 0:    # in progressive training
                 bg, ed = self.begin_ends[prog_si]
                 assert logits_BLV.shape[1] == gt_BL.shape[1] == ed
@@ -546,32 +545,16 @@ class VARRaterTrainer(object):
                                     encoder_pool_feat=new_pooled_embed)
                 # softmax on ratingWeight
                 ratingWeight = torch.softmax(ratingWeight, dim=0)
-                ##TODO### 
-                # 保证下限为0.001
-                # ratingWeight = torch.clamp(ratingWeight, min=0.001)
-                # # 如果需要重新归一化，使得总和为1
-                # ratingWeight = ratingWeight / ratingWeight.sum()
-                ###TODO####
-                # print("in line 547 ratingWeight", ratingWeight)
-                # ##TODO### 画loss和score的曲线图
-                # loss_draw = new_loss.sum(dim=-1).mean()
-                # ratingWeight_draw = ratingWeight.sum(dim=-1).mean()
-                # ##设置batchsize=1 然后找出loss和score间关系 
-                # print(f"loss_draw: {loss_draw:.4f}, ratingWeight_draw: {ratingWeight_draw:.4f}")
-
             weighted_new_loss = (new_loss * ratingWeight).sum(dim=-1).mean()
-            # weighted_new_loss = loss_draw * ratingWeight_draw ##TODO
-            # >>> loss of new_logits_BLV
 
         # backward
-        total_loss = self.ul_weight * loss + (1 - self.ul_weight) * weighted_new_loss #ul_weight=0.97
-        # print("in line 550 ul_weight, total_loss", self.ul_weight, total_loss)
+        total_loss = self.ul_weight * loss + (1 - self.ul_weight) * weighted_new_loss 
         if fixVar:
             total_loss = 0 * total_loss
         grad_norm, scale_log2 = self.var_opt.backward_clip_step(loss=total_loss, stepping=stepping)
 
         if stepping and hasattr(self, 'gradient_collector'):
-            if 'label' in locals():  # 或者其他标签变量名
+            if 'label' in locals():  
                 self.gradient_collector.add_label(label.item())
 
         # <<< backward for datarater
@@ -581,9 +564,7 @@ class VARRaterTrainer(object):
                             encoder_pool_feat=new_pooled_embed)
         # softmax on ratingWeight
         ratingWeight = torch.softmax(ratingWeight, dim=0)
-        # print("in line 562 rating weight ", ratingWeight)
         rater_loss = (new_loss.detach() * ratingWeight).sum(dim=-1).mean()
-        # print("in line 563 rater_loss ", new_loss)
         if rater_reg:
             eps = 1e-8
             reg_weight = 0.01
@@ -609,7 +590,6 @@ class VARRaterTrainer(object):
                     acc_tail = (pred_BL[:, last_l:] == gt_BL[:, last_l:]).float().mean().item() * 100
             grad_norm = grad_norm.item()
             metric_lg.update(Lm=Lmean, Lt=Ltail, Accm=acc_mean, Acct=acc_tail, tnm=grad_norm)
-            # accm是平均所有尺度的loss，acc_tail是最后一个level的loss
 
         # log to tensorboard
         if g_it == 0 or (g_it + 1) % 200 == 0:
@@ -643,7 +623,6 @@ class VARRaterTrainer(object):
     def train_sampler_masked(self, it: int, g_it: int, stepping: bool, metric_lg: MetricLogger, tb_lg: TensorboardLogger,
         inp_B3HW: FTen, label_B: Union[ITen, FTen], prompt_embeds: None, prog_si: int, prog_wp_it: float, precompute_latent: bool = False
     ) -> Tuple[Optional[Union[Ten, float]], Optional[float]]:
-        # label_B是imagenet的class，inp_B3HW是输入图像
         # progressive training
         encoder_hidden_states,attn_mask,pooled_embed=prompt_embeds
         self.var.prog_si = self.vae_local.quantize.prog_si = prog_si
@@ -658,16 +637,15 @@ class VARRaterTrainer(object):
         B, V = label_B.shape[0], self.vae_local.vocab_size
         self.var.require_backward_grad_sync = stepping
 
-        gt_idx_Bl = self.vae_local.img_to_quant_embed(inp_B3HW)#gt_idx_Bl:所有scale对应的离散token的真值
+        gt_idx_Bl = self.vae_local.img_to_quant_embed(inp_B3HW)
         gt_BL = torch.cat(gt_idx_Bl, dim=1)
         #self.from_idx=9
         self.from_idx=self.var_wo_ddp.from_idx
         bg,_=self.begin_ends[self.from_idx];_,ed=self.begin_ends[-1]
         gt_BL=gt_BL[:,bg:ed]
         embed_BLCv=self.quantize_local.embedding(gt_BL)
-        #暂时是按照目前的idx做一个embed算的，后期看有没有必要把fhat算出来
         # embed_BLCv=torch.cat(embed_BlCv, dim=1)
-        x_BLCv_wo_first_l: Ten = self.quantize_local.idxBl_to_var_input(gt_idx_Bl)#返回的是scale的插值结果，注意x_BLCv_wo_first_l没有第一个scale
+        x_BLCv_wo_first_l: Ten = self.quantize_local.idxBl_to_var_input(gt_idx_Bl)#
 
         with self.var_opt.amp_ctx:
             self.var_wo_ddp.forward_sampler
@@ -693,7 +671,7 @@ class VARRaterTrainer(object):
         pred_BL = logits_sampler_masked.data.argmax(dim=-1)
         if it == 0 or it in metric_lg.log_iters:
             Lmean = self.val_loss(logits_sampler_masked.data.view(-1, V+1), gt_BL_masked.view(-1)).item()
-            acc_mean = (((pred_BL*(1-mask)) == gt_BL_masked).float().sum()/((1-mask).sum())).item() * 100#只算预测的，不算mask的
+            acc_mean = (((pred_BL*(1-mask)) == gt_BL_masked).float().sum()/((1-mask).sum())).item() * 100 
             if prog_si >= 0:    # in progressive training
                 Ltail = acc_tail = -1
             else:               # not in progressive training
