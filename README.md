@@ -94,7 +94,7 @@ If you use Alchemist in your research, please cite:
 @inproceedings{ding2025alchemist,
   title={Alchemist: Unlocking Efficiency in Text-to-Image Model Training via Meta-Gradient Data Selection},
   author={Kaixin Ding, Yang Zhou, Xi Chen, Miao Yang, Jiarong Ou, Rui Chen, Xin Tao, Hengshuang Zhao},
-  booktitle={arxiv},
+  booktitle={arxiv:2512.16905},
   year = {2025},
 }
 ```
