@@ -1,7 +1,7 @@
 # Alchemist: Unlocking Efficiency in Text-to-Image Model Training via Meta-Gradient Data Selection
-[**Project**](https://kxding.github.io/project/Alchemist/) | [**Paper**](https://arxiv.org/pdf/2512.16905) | [**Paper**](https://huggingface.co/papers/2512.16905) 
+[**Project**](https://kxding.github.io/project/Alchemist/) | [**Paper**](https://arxiv.org/pdf/2512.16905) | [**Huggingface**](https://huggingface.co/papers/2512.16905) 
 
-[Kaixin Ding](https://kxding.github.io/project/Alchemist/)<sup>1</sup>, [Yang Zhou](https://www.dgp.toronto.edu/~hertzman/)<sup>2</sup>, [Xi Chen](https://people.eecs.berkeley.edu/~efros/)<sup>1</sup>, [Miao Yang](http://richzhang.github.io/)<sup>3</sup>, [Jiarong Ou](https://cs.cmu.edu/~junyanz)<sup>3</sup>, [Rui Chen](https://cs.cmu.edu/~junyanz)<sup>3</sup>, [Xin Tao](https://cs.cmu.edu/~junyanz)<sup>3</sup>, [Hengshuang Zhao](https://cs.cmu.edu/~junyanz)<sup>1</sup>.
+[Kaixin Ding](https://kxding.github.io/project/Alchemist/)<sup>1</sup>, [Yang Zhou](https://kxding.github.io/project/Alchemist/)<sup>2</sup>, [Xi Chen](https://xavierchen34.github.io/)<sup>1</sup>, [Miao Yang](https://kxding.github.io/project/Alchemist/)<sup>3</sup>, [Jiarong Ou](https://kxding.github.io/project/Alchemist/)<sup>3</sup>, [Rui Chen](https://kxding.github.io/project/Alchemist/)<sup>3</sup>, [Xin Tao](https://www.xtao.website/)<sup>3</sup>, [Hengshuang Zhao](https://hszhao.github.io/)<sup>1</sup>.
 <br> HKU<sup>1</sup>, SCUT<sup>2</sup>, Kuaishou Technology, Kling team<sup>3</sup>
 
 
